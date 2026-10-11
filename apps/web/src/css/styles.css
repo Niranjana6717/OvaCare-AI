@@ -1,0 +1,215 @@
+/* OvaCare AI — design system (requirement #42: professional health-tech
+   look, not a generic dashboard). Plain CSS, no build step. */
+
+:root {
+  --color-bg: #faf8fb;
+  --color-surface: #ffffff;
+  --color-border: #e6e1ea;
+  --color-text: #1f1a24;
+  --color-text-muted: #6b6472;
+  --color-primary: #7b3fa0;
+  --color-primary-dark: #5f2f7d;
+  --color-primary-tint: #f2e9f7;
+  --color-accent: #d88ac0;
+  --color-success: #2f8f5b;
+  --color-success-tint: #e7f6ee;
+  --color-warning: #b5790a;
+  --color-warning-tint: #fbf1de;
+  --color-danger: #c23b3b;
+  --color-danger-tint: #fbeaea;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-card: 0 1px 2px rgba(31, 26, 36, 0.04), 0 8px 24px rgba(31, 26, 36, 0.06);
+  --font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #17141a;
+    --color-surface: #211c28;
+    --color-border: #332c3d;
+    --color-text: #f1eef4;
+    --color-text-muted: #a89fb3;
+    --color-primary: #c9a0e0;
+    --color-primary-dark: #ddbef0;
+    --color-primary-tint: #2c2334;
+    --color-accent: #e6a8cf;
+    --color-success: #7fd6a6;
+    --color-success-tint: #1c2f24;
+    --color-warning: #e6bd6e;
+    --color-warning-tint: #332a15;
+    --color-danger: #e88b8b;
+    --color-danger-tint: #331f1f;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { display: flex; min-height: 100vh; }
+
+/* --- Sidebar (desktop) / top nav (mobile) --- */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sidebar .brand {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  padding: 0 12px 20px;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.94rem;
+  cursor: pointer;
+}
+.nav-link:hover { background: var(--color-primary-tint); color: var(--color-text); }
+.nav-link.active { background: var(--color-primary-tint); color: var(--color-primary-dark); font-weight: 600; }
+
+main.content { flex: 1; padding: 32px 40px; max-width: 1100px; }
+
+/* --- Cards --- */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card h2 { margin-top: 0; font-size: 1.05rem; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+
+.stat { display: flex; flex-direction: column; gap: 4px; }
+.stat .value { font-size: 1.9rem; font-weight: 700; color: var(--color-primary-dark); }
+.stat .label { color: var(--color-text-muted); font-size: 0.85rem; }
+
+/* --- Forms --- */
+label { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin: 14px 0 6px; }
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--color-primary);
+  color: white;
+}
+.btn:hover { background: var(--color-primary-dark); }
+.btn.secondary { background: var(--color-primary-tint); color: var(--color-primary-dark); }
+.btn.danger { background: var(--color-danger); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* --- Alerts / banners --- */
+.banner { border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 18px; font-size: 0.92rem; line-height: 1.5; }
+.banner.info { background: var(--color-primary-tint); color: var(--color-primary-dark); }
+.banner.success { background: var(--color-success-tint); color: var(--color-success); }
+.banner.warning { background: var(--color-warning-tint); color: var(--color-warning); }
+.banner.danger { background: var(--color-danger-tint); color: var(--color-danger); font-weight: 600; }
+
+.muted { color: var(--color-text-muted); }
+.disclaimer { font-size: 0.82rem; color: var(--color-text-muted); border-top: 1px solid var(--color-border); margin-top: 18px; padding-top: 14px; white-space: pre-line; }
+
+/* display:block lets the table itself become a horizontal-scroll container
+   on any viewport too narrow for its natural column widths (e.g. a long
+   unbreakable value like a model version string) — without this, a table
+   forces the whole page wider than the viewport instead of just scrolling
+   internally. thead/tbody/tr keep their normal table layout since only the
+   outer <table> box's display changes. */
+table { display: block; width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-collapse: collapse; font-size: 0.9rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+th { color: var(--color-text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+.pill.regular { background: var(--color-success-tint); color: var(--color-success); }
+.pill.irregular { background: var(--color-warning-tint); color: var(--color-warning); }
+
+.auth-shell { max-width: 380px; margin: 10vh auto; }
+.auth-shell .card { padding: 32px; }
+
+.quick-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------------
+   Responsive breakpoints (requirement: mobile/web responsiveness across
+   5 tiers — mobile portrait, mobile landscape, tablet, laptop, large
+   desktop). The unmedia-queried rules above are the laptop baseline
+   (roughly 1025–1439px) and already render correctly there, so that tier
+   has no rules of its own below — nothing to fix means nothing to change.
+   Each query below only adjusts what would otherwise overflow, clip, or
+   feel cramped at that size; none of it changes the underlying design
+   (same nav, same cards, same content). --------------------------------- */
+
+/* Tablet and narrower (≤780px): collapse the permanent left sidebar into
+   a horizontally-scrollable top nav bar. Unchanged from the original
+   single breakpoint — this already worked correctly, so it's preserved
+   exactly rather than "fixed". */
+@media (max-width: 780px) {
+  #app { flex-direction: column; }
+  .sidebar { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--color-border); padding: 12px; }
+  .sidebar .brand { display: none; }
+  main.content { padding: 20px; }
+}
+
+/* Mobile landscape and narrower (≤767px): main.content's fixed 32px/40px
+   desktop padding starts eating a large share of the viewport — tighten
+   it and card padding so form fields and button rows have real room
+   instead of being squeezed against the card edge. */
+@media (max-width: 767px) {
+  main.content { padding: 16px; }
+  .card { padding: 18px; }
+}
+
+/* Mobile portrait (≤480px): narrowest phones. Tighter still, and the
+   auth card (login/register) no longer needs a large 10vh top margin
+   that pushes it (and the on-screen keyboard target) further down than
+   a small screen has room for. */
+@media (max-width: 480px) {
+  .card { padding: 14px; }
+  .auth-shell { margin: 6vh auto; }
+  .auth-shell .card { padding: 20px; }
+  .stat .value { font-size: 1.6rem; }
+}
+
+/* Large desktop (≥1440px): the content column's 1100px cap leaves a lot
+   of a wide monitor empty next to the sidebar; let it use more of the
+   available width rather than fixing a redesign-sized gutter. */
+@media (min-width: 1440px) {
+  main.content { max-width: 1320px; }
+}

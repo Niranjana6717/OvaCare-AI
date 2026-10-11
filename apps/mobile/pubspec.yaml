@@ -1,0 +1,50 @@
+name: ovacare_ai
+description: >
+  OvaCare AI — PCOS-aware cycle tracking and AI-assisted screening for
+  Android, iOS, and desktop (see apps/desktop/README.md — desktop builds
+  from this same codebase, not a separate one).
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Minimal, deliberately small dependency set — every package below is
+  # used directly by lib/ code, nothing speculative pulled in "in case."
+  http: ^1.2.1                    # backend API calls (services/api_client.dart)
+  provider: ^6.1.2                # app-wide auth/session state (state/app_state.dart)
+  flutter_secure_storage: ^9.2.2  # JWT access/refresh tokens — never SharedPreferences,
+                                   # which is unencrypted on-disk storage (see docs/security.md)
+  path_provider: ^2.1.4           # writes the downloaded PDF health report to on-device
+                                   # storage (insights_screen.dart) — version pin not
+                                   # live-verified against pub.dev in this sandbox (no
+                                   # general internet access here, see docs/deployment.md);
+                                   # confirm with `flutter pub outdated` before first real
+                                   # `flutter pub get`.
+  flutter_local_notifications: ^17.2.3  # real, local (no FCM/APNs — none is configured,
+                                   # see docs/deployment.md) scheduling of the upcoming-period
+                                   # reminder (services/local_reminder_service.dart). Version
+                                   # pin not live-verified against pub.dev in this sandbox;
+                                   # confirm with `flutter pub outdated` and re-check the
+                                   # plugin's current API surface against
+                                   # local_reminder_service.dart before first real
+                                   # `flutter pub get` — see that file's own header comment
+                                   # and apps/mobile/README.md's "Local notifications" section
+                                   # for the platform-project setup this pin still needs.
+  timezone: ^0.9.4                 # required by flutter_local_notifications' zonedSchedule;
+                                   # same not-live-verified caveat as above.
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

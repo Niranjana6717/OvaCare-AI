@@ -1,0 +1,25 @@
+# Core
+pandas==2.2.3
+numpy==2.2.1
+scikit-learn==1.6.0
+joblib==1.4.2
+
+# Optional: gradient boosting comparison. train.py imports this
+# defensively (`try/except ImportError`) and logs — rather than silently
+# skips — when it isn't installed, per the repo rule against auto-declaring
+# a winner: if XGBoost can't run, it simply can't be in the comparison,
+# and the report says so.
+xgboost==2.1.3
+
+# Optional: explainability. app/ml/explainability.py (backend) and
+# src/explain.py (here) both fall back to a documented coefficient/
+# importance-based method when this isn't installed.
+shap==0.46.0
+
+# Notebooks
+jupyter==1.1.1
+matplotlib==3.10.0
+seaborn==0.13.2
+
+# Testing
+pytest==8.3.4

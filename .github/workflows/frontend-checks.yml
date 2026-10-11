@@ -1,0 +1,54 @@
+name: Frontend checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  web-and-admin-js:
+    # apps/web and admin/dashboard are plain HTML/CSS/vanilla-JS with no
+    # build step (see docs/deployment.md — npm's registry was not
+    # reachable in this project's original development sandbox), so
+    # there's no `npm run build`/`npm test` here. What CAN be checked
+    # without a build step: every .js file parses, and every .json file
+    # this repo hand-maintains is valid.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax-check every JS file (apps/web, admin/dashboard)
+        run: |
+          set -e
+          for f in $(find apps/web admin/dashboard -name "*.js"); do
+            echo "Checking $f"
+            node --check "$f"
+          done
+
+      - name: Validate shared/constants/enums.json
+        run: node -e "JSON.parse(require('fs').readFileSync('shared/constants/enums.json', 'utf8')); console.log('OK')"
+
+  desktop-note:
+    # apps/desktop has no separate source of its own — it's the same
+    # Flutter codebase as apps/mobile, built for a desktop target (see
+    # apps/desktop/README.md). Nothing to check independently here.
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "apps/desktop builds from apps/mobile — see the flutter job below and apps/desktop/README.md."
+
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test

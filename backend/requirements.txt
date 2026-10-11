@@ -1,0 +1,44 @@
+# --- Web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# --- Database ---
+sqlalchemy==2.0.36
+alembic==1.14.0
+psycopg2-binary==2.9.10
+
+# --- Auth / security ---
+# JWT via PyJWT (not python-jose) and password hashing via the standard
+# library's hashlib.pbkdf2_hmac (not passlib/bcrypt) — see the docstrings in
+# app/security/jwt_handler.py and app/security/password.py for why: these
+# were the choices actually installable/testable in this project's
+# development sandbox, so unlike much of the rest of this dependency list,
+# they have real executed test coverage rather than being written-and-assumed.
+PyJWT==2.12.1
+python-multipart==0.0.20
+
+# --- Rate limiting ---
+slowapi==0.1.9
+
+# --- ML (inference) ---
+scikit-learn==1.6.0
+joblib==1.4.2
+numpy==2.2.1
+pandas==2.2.3
+
+# --- Utilities ---
+python-dotenv==1.0.1
+email-validator==2.2.0
+
+# --- Reports ---
+# PDF health report export (app/services/report_pdf_service.py), additive
+# alongside the existing JSON export — does not replace it.
+reportlab==4.4.10
+
+# --- Testing ---
+pytest==8.3.4
+pytest-asyncio==0.25.0
+httpx==0.28.1
+faker==33.1.0

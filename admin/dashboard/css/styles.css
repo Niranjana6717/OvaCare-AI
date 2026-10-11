@@ -1,0 +1,218 @@
+/* OvaCare AI — admin portal design system. Deliberately distinct palette
+   from apps/web (slate/blue instead of purple) so the two surfaces are
+   never visually confusable — an admin screenshot should never look like
+   it could be a patient-facing screen, and vice versa. */
+
+:root {
+  --color-bg: #f5f7fa;
+  --color-surface: #ffffff;
+  --color-border: #dde3ea;
+  --color-text: #17212b;
+  --color-text-muted: #5b6b7c;
+  --color-primary: #2a5da8;
+  --color-primary-dark: #1e4680;
+  --color-primary-tint: #e8eff9;
+  --color-success: #2f8f5b;
+  --color-success-tint: #e7f6ee;
+  --color-warning: #b5790a;
+  --color-warning-tint: #fbf1de;
+  --color-danger: #c23b3b;
+  --color-danger-tint: #fbeaea;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-card: 0 1px 2px rgba(23, 33, 43, 0.05), 0 8px 24px rgba(23, 33, 43, 0.06);
+  --font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #10151b;
+    --color-surface: #182028;
+    --color-border: #2b3540;
+    --color-text: #eef2f6;
+    --color-text-muted: #9fadbb;
+    --color-primary: #7fabe6;
+    --color-primary-dark: #a9c6ef;
+    --color-primary-tint: #1c2733;
+    --color-success: #7fd6a6;
+    --color-success-tint: #1c2f24;
+    --color-warning: #e6bd6e;
+    --color-warning-tint: #332a15;
+    --color-danger: #e88b8b;
+    --color-danger-tint: #331f1f;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 230px;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sidebar .brand {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  padding: 0 12px 4px;
+}
+.sidebar .brand-sub {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  padding: 0 12px 20px;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.94rem;
+  cursor: pointer;
+}
+.nav-link:hover { background: var(--color-primary-tint); color: var(--color-text); }
+.nav-link.active { background: var(--color-primary-tint); color: var(--color-primary-dark); font-weight: 600; }
+
+main.content { flex: 1; padding: 32px 40px; max-width: 1200px; }
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card h2 { margin-top: 0; font-size: 1.05rem; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+
+.stat { display: flex; flex-direction: column; gap: 4px; }
+.stat .value { font-size: 1.9rem; font-weight: 700; color: var(--color-primary-dark); }
+.stat .label { color: var(--color-text-muted); font-size: 0.85rem; }
+
+label { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin: 14px 0 6px; }
+input, select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+input:focus, select:focus { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--color-primary);
+  color: white;
+}
+.btn:hover { background: var(--color-primary-dark); }
+.btn.secondary { background: var(--color-primary-tint); color: var(--color-primary-dark); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.banner { border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 18px; font-size: 0.92rem; line-height: 1.5; }
+.banner.info { background: var(--color-primary-tint); color: var(--color-primary-dark); }
+.banner.success { background: var(--color-success-tint); color: var(--color-success); }
+.banner.warning { background: var(--color-warning-tint); color: var(--color-warning); }
+.banner.danger { background: var(--color-danger-tint); color: var(--color-danger); font-weight: 600; }
+
+.muted { color: var(--color-text-muted); }
+
+/* display:block lets the table itself become a horizontal-scroll container
+   on any viewport too narrow for its natural column widths — the model
+   registry table (calibration_method / dataset_version columns include
+   long unbreakable strings) is the concrete case this fixes. Without this,
+   such a table forces the whole page wider than the viewport instead of
+   just scrolling internally. thead/tbody/tr keep their normal table layout
+   since only the outer <table> box's display changes. */
+table { display: block; width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-collapse: collapse; font-size: 0.88rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+th { color: var(--color-text-muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+.pill.production { background: var(--color-success-tint); color: var(--color-success); }
+.pill.staging { background: var(--color-warning-tint); color: var(--color-warning); }
+.pill.development, .pill.validation, .pill.archived { background: var(--color-primary-tint); color: var(--color-primary-dark); }
+.pill.active { background: var(--color-success-tint); color: var(--color-success); }
+.pill.inactive { background: var(--color-danger-tint); color: var(--color-danger); }
+.pill.danger { background: var(--color-danger-tint); color: var(--color-danger); }
+
+.auth-shell { max-width: 380px; margin: 10vh auto; }
+.auth-shell .card { padding: 32px; }
+
+.restricted-note {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+  margin-top: 18px;
+  padding-top: 14px;
+}
+
+/* ---------------------------------------------------------------------
+   Responsive breakpoints (requirement: 5 tiers — mobile portrait, mobile
+   landscape, tablet, laptop, large desktop). The unmedia-queried rules
+   above are the laptop baseline (roughly 1025–1439px) and already render
+   correctly there, so that tier has no rules of its own below. Each query
+   only adjusts what would otherwise overflow, clip, or feel cramped at
+   that size — none of it changes the underlying design. ---------------- */
+
+/* Tablet and narrower (≤780px): collapse the permanent left sidebar into
+   a horizontally-scrollable top nav bar. Unchanged from the original
+   single breakpoint. */
+@media (max-width: 780px) {
+  #app { flex-direction: column; }
+  .sidebar { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--color-border); padding: 12px; }
+  .sidebar .brand, .sidebar .brand-sub { display: none; }
+  main.content { padding: 20px; }
+}
+
+/* Mobile landscape and narrower (≤767px): tighten padding so the model
+   table, forms, and stat cards aren't squeezed against the card edge. */
+@media (max-width: 767px) {
+  main.content { padding: 16px; }
+  .card { padding: 18px; }
+}
+
+/* Mobile portrait (≤480px): narrowest phones. */
+@media (max-width: 480px) {
+  .card { padding: 14px; }
+  .auth-shell { margin: 6vh auto; }
+  .auth-shell .card { padding: 20px; }
+  .stat .value { font-size: 1.6rem; }
+}
+
+/* Large desktop (≥1440px): use more of the available width instead of a
+   fixed 1200px cap that leaves a lot of a wide monitor empty. */
+@media (min-width: 1440px) {
+  main.content { max-width: 1400px; }
+}

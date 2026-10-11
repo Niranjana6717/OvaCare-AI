@@ -1,0 +1,41 @@
+name: Build validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  docker-compose-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker-compose.yml syntax
+        run: docker compose config
+
+  backend-image-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the backend Docker image
+        run: docker build -t ovacare-backend:ci ./backend
+
+  openapi-contract-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pyyaml
+      - name: Confirm shared/api-contracts/openapi.yaml parses
+        run: |
+          python -c "
+          import yaml
+          with open('shared/api-contracts/openapi.yaml') as f:
+              doc = yaml.safe_load(f)
+          assert 'paths' in doc and len(doc['paths']) > 0
+          assert 'components' in doc
+          print(f\"OK — {len(doc['paths'])} paths, {len(doc['components']['schemas'])} schemas\")
+          "

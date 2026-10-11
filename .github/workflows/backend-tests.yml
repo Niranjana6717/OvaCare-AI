@@ -1,0 +1,60 @@
+name: Backend tests
+
+# Runs on GitHub's own runners, which have normal internet access —
+# unlike this project's original development sandbox (see
+# docs/deployment.md), so this workflow can actually `pip install` the
+# real requirements.txt (FastAPI, SQLAlchemy, pytest, ...) and run the
+# full test suite, including backend/tests/test_auth_api.py,
+# test_cycles_api.py, test_consent_and_assessment_api.py, and
+# test_admin_access_api.py — the pytest+FastAPI+SQLAlchemy integration
+# tests that were written but could not be executed in-sandbox. This is
+# the first place they actually run.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run the dependency-free unit tests (unittest)
+        # Same tests this project ran directly in its dev sandbox, kept
+        # in CI as a fast first check before the full pytest suite below.
+        run: |
+          python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Run the full API + database integration suite (pytest)
+        # conftest.py sets its own JWT_SECRET/DATABASE_URL defaults
+        # (in-memory SQLite) via os.environ.setdefault, so no env is
+        # strictly required here — set explicitly anyway so a change to
+        # that default doesn't silently start depending on CI's ambient
+        # environment.
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+          JWT_SECRET: "ci-test-secret-do-not-use-in-production"
+        run: pytest tests/ -v
+
+      - name: Alembic migration sanity check
+        env:
+          DATABASE_URL: "sqlite:///./ci_migration_check.db"
+          JWT_SECRET: "ci-test-secret-do-not-use-in-production"
+        run: |
+          alembic upgrade head
+          alembic downgrade base

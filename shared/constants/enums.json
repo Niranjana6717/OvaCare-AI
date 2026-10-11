@@ -1,0 +1,31 @@
+{
+  "$comment": "Canonical enum values, hand-synced from backend/app/database/models/*.py (the single source of truth). There is no cross-language codegen wired up in this project — Dart (apps/mobile), TypeScript-as-documentation (shared/types), and the JS apps (apps/web, admin/dashboard) each reference these values directly rather than importing a generated client, so this file exists to make 'hand-synced' something that can actually be diffed against the backend source instead of drifting silently. If you change an enum in backend/app/database/models/, update this file in the same change.",
+
+  "UserRole": ["user", "admin", "clinical_reviewer"],
+
+  "FlowLevel": ["spotting", "light", "medium", "heavy"],
+
+  "SymptomType": ["acne", "hair_growth_changes", "hair_loss", "pelvic_discomfort", "fatigue", "mood_changes", "other"],
+
+  "ScreeningOutcome": ["lower_indication", "higher_indication", "insufficient_data"],
+
+  "NotificationType": ["upcoming_period", "period_logging", "cycle_tracking", "symptom_logging"],
+
+  "ConsentType": [
+    "core_service",
+    "health_data_processing",
+    "ai_screening_acknowledgement",
+    "notification_permission",
+    "analytics",
+    "research_model_improvement"
+  ],
+  "REQUIRED_CONSENT_TYPES": ["core_service", "health_data_processing"],
+  "OPTIONAL_CONSENT_TYPES": ["notification_permission", "analytics", "research_model_improvement"],
+
+  "ModelStage": ["development", "validation", "staging", "production", "archived"],
+
+  "DAYS_BEFORE_PERIOD_OPTIONS": [1, 2, 3, 5],
+
+  "API_VERSION": "v1",
+  "API_PREFIX": "/api/v1"
+}

@@ -1,0 +1,611 @@
+openapi: 3.0.3
+info:
+  title: OvaCare AI API
+  version: "1.0.0"
+  description: >
+    Hand-written OpenAPI document mirroring backend/app/api/*.py and
+    backend/app/schemas/*.py. FastAPI generates a live version of this at
+    /api/v1/openapi.json when the backend is actually running — that
+    generated document is the source of truth once the service is up;
+    this file exists so the contract is readable and diffable from a
+    repo checkout without running anything, and so apps/web,
+    admin/dashboard, and apps/mobile have one place to check expected
+    request/response shapes against (see shared/types/models.ts for the
+    same shapes as TypeScript, and shared/constants/enums.json for enum
+    value lists). If this ever disagrees with the FastAPI source, the
+    Python source is correct.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201': { description: Account created, content: { application/json: { schema: { $ref: '#/components/schemas/TokenPair' } } } }
+        '409': { description: Email already registered, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+
+  /auth/login:
+    post:
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TokenPair' } } } }
+        '401': { description: Invalid credentials, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { refresh_token: { type: string } } } } }
+      responses:
+        '200': { description: OK }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [refresh_token], properties: { refresh_token: { type: string } } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TokenPair' } } } }
+        '401': { description: Refresh token invalid, revoked, or expired }
+
+  /auth/forgot-password:
+    post:
+      tags: [auth]
+      security: []
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { email: { type: string, format: email } } } } }
+      responses:
+        '200':
+          description: >
+            Always 200 regardless of whether the email exists, to avoid
+            confirming account existence to an unauthenticated caller.
+
+  /auth/reset-password:
+    post:
+      tags: [auth]
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, new_password]
+              properties:
+                token: { type: string }
+                new_password: { type: string }
+      responses:
+        '200': { description: OK }
+        '400': { description: Token invalid or expired }
+
+  /users/me:
+    get:
+      tags: [users]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ProfileResponse' } } } }
+    put:
+      tags: [users]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ProfileUpdateRequest' } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ProfileResponse' } } } }
+    delete:
+      tags: [users]
+      summary: Soft-delete the caller's own account
+      description: >
+        Sets deleted_at and is_active=false server-side (auth_service.delete_account).
+        Documented deletion behavior — what's deleted, retained, and the
+        timing — lives in docs/privacy.md, not restated per-field here.
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/MessageResponse' } } } }
+
+  /consent:
+    get:
+      tags: [consent]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ConsentRecord' } } } } }
+    post:
+      tags: [consent]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConsentSubmitRequest' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/ConsentRecord' } } } }
+
+  /consent/{consent_type}:
+    put:
+      tags: [consent]
+      summary: Withdraw a consent
+      description: >
+        Required consent types (core_service, health_data_processing)
+        cannot be withdrawn via this route while the account stays
+        active — see REQUIRED_CONSENT_TYPES in
+        shared/constants/enums.json and consent_service.withdraw_consent.
+      parameters:
+        - { name: consent_type, in: path, required: true, schema: { $ref: '#/components/schemas/ConsentType' } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ConsentRecord' } } } }
+        '400': { description: Attempted to withdraw a required consent type }
+
+  /cycles:
+    get:
+      tags: [cycles]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/CycleRecord' } } } } }
+    post:
+      tags: [cycles]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/CycleCreateRequest' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/CycleRecord' } } } }
+
+  /cycles/summary:
+    get:
+      tags: [cycles]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/CycleSummary' } } } }
+
+  /cycles/estimate:
+    get:
+      tags: [cycles]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/CycleEstimateResponse' } } } }
+
+  /cycles/{cycle_id}:
+    get:
+      tags: [cycles]
+      parameters: [{ name: cycle_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/CycleRecord' } } } }
+    put:
+      tags: [cycles]
+      parameters: [{ name: cycle_id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/CycleCreateRequest' } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/CycleRecord' } } } }
+    delete:
+      tags: [cycles]
+      parameters: [{ name: cycle_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '204': { description: Deleted }
+
+  /symptoms:
+    get:
+      tags: [symptoms]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Symptom' } } } } }
+    post:
+      tags: [symptoms]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/SymptomCreateRequest' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Symptom' } } } }
+
+  /symptoms/{symptom_id}:
+    put:
+      tags: [symptoms]
+      parameters: [{ name: symptom_id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/SymptomCreateRequest' } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Symptom' } } } }
+    delete:
+      tags: [symptoms]
+      parameters: [{ name: symptom_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '204': { description: Deleted }
+
+  /assessments:
+    post:
+      tags: [assessments]
+      summary: Persist a submitted questionnaire (does not itself run the ML prediction)
+      description: >
+        Splits create-vs-predict deliberately (assessment_service.create_assessment
+        vs. run_safety_and_prediction) so a red-flag safety check can be run
+        and surfaced even if the ML path is unavailable. Use POST
+        /predictions to actually get a screening result for an assessment.
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/AssessmentSubmitRequest' } } }
+      responses:
+        '201': { description: Created }
+    get:
+      tags: [assessments]
+      responses:
+        '200': { description: OK }
+
+  /assessments/{assessment_id}:
+    get:
+      tags: [assessments]
+      parameters: [{ name: assessment_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK }
+
+  /predictions:
+    post:
+      tags: [predictions]
+      summary: Run the red-flag safety check and (if applicable) the ML screening for an assessment
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [assessment_id], properties: { assessment_id: { type: string } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/AssessmentSubmitResponse' } } } }
+
+  /predictions/history:
+    get:
+      tags: [predictions]
+      description: >
+        Each historical entry retains the model_version/feature_schema_version/
+        preprocessing_version/threshold_version that were active AT THE TIME —
+        never recalculated against a newer model after the fact (requirement #90 test 7).
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/PredictionResult' } } } } }
+
+  /insights:
+    get:
+      tags: [insights]
+      description: Personalized, non-diagnostic cycle insights + static, review-tracked educational content.
+      responses:
+        '200': { description: OK }
+
+  /reports:
+    get:
+      tags: [reports]
+      description: Generates an exportable health report; requires explicit user action, never an implicit background export.
+      responses:
+        '200': { description: OK }
+
+  /reports/pdf:
+    get:
+      tags: [reports]
+      description: Same report content as GET /reports, as a downloadable PDF (in addition to, not replacing, the JSON endpoint above). Includes the mandatory non-diagnostic disclaimer text.
+      responses:
+        '200': { description: OK, content: { application/pdf: {} } }
+
+  /notifications/preferences:
+    get:
+      tags: [notifications]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreference' } } } }
+    put:
+      tags: [notifications]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreference' } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreference' } } } }
+
+  /admin/users:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      description: Requires the admin role. Account/system metadata only — never health data (see admin/dashboard/README.md).
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+        - { name: offset, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminUserRow' } } } } }
+        '403': { description: Caller is not an admin }
+
+  /admin/models:
+    get:
+      tags: [admin]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminModelVersionRow' } } } } }
+        '403': { description: Caller is not an admin }
+
+  /admin/system-health:
+    get:
+      tags: [admin]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AdminSystemHealth' } } } }
+        '403': { description: Caller is not an admin }
+
+  /admin/audit-logs:
+    get:
+      tags: [admin]
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 100, maximum: 500 } }
+        - { name: offset, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminAuditLogRow' } } } } }
+        '403': { description: Caller is not an admin }
+
+  /admin/monitoring:
+    get:
+      tags: [admin]
+      description: Aggregate ML production-monitoring numbers (prediction distribution, missing-data rate, inference errors/latency, drift signal) over a rolling window. Never triggers or recommends retraining.
+      parameters:
+        - { name: window_days, in: query, schema: { type: integer, default: 30, minimum: 1, maximum: 365 } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AdminMonitoringSnapshot' } } } }
+        '403': { description: Caller is not an admin }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        detail: { type: string }
+        request_id: { type: string }
+
+    MessageResponse:
+      type: object
+      properties: { message: { type: string } }
+
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 10, description: "Must contain letters and digits (password_meets_policy)." }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    TokenPair:
+      type: object
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        token_type: { type: string, example: bearer }
+
+    UserRole: { type: string, enum: [user, admin, clinical_reviewer] }
+    FlowLevel: { type: string, enum: [spotting, light, medium, heavy] }
+    SymptomType: { type: string, enum: [acne, hair_growth_changes, hair_loss, pelvic_discomfort, fatigue, mood_changes, other] }
+    ScreeningOutcome: { type: string, enum: [lower_indication, higher_indication, insufficient_data] }
+    ConsentType:
+      type: string
+      enum: [core_service, health_data_processing, ai_screening_acknowledgement, notification_permission, analytics, research_model_improvement]
+    ModelStage: { type: string, enum: [development, validation, staging, production, archived] }
+
+    # /users/me is a single flat resource (backend/app/schemas/user.py) —
+    # no nested "profile" object, and no id/role/is_active/created_at
+    # here; those matter only to the admin portal (see AdminUserRow),
+    # reached through a completely different endpoint (GET /admin/users).
+    ProfileResponse:
+      type: object
+      properties:
+        email: { type: string }
+        full_name: { type: string, nullable: true }
+        date_of_birth: { type: string, format: date, nullable: true }
+        height_cm: { type: number, nullable: true }
+        weight_kg: { type: number, nullable: true }
+        bmi: { type: number, nullable: true, description: "Server-computed; informational only, never the primary determinant of a screening result." }
+        country: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        timezone: { type: string }
+
+    ProfileUpdateRequest:
+      type: object
+      properties:
+        full_name: { type: string, nullable: true }
+        date_of_birth: { type: string, format: date, nullable: true }
+        height_cm: { type: number, nullable: true }
+        weight_kg: { type: number, nullable: true }
+        country: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        timezone: { type: string, nullable: true }
+
+    ConsentSubmitRequest:
+      type: object
+      required: [consent_type, accepted, consent_version, policy_version, app_version]
+      properties:
+        consent_type: { $ref: '#/components/schemas/ConsentType' }
+        accepted: { type: boolean }
+        consent_version: { type: string }
+        policy_version: { type: string }
+        app_version: { type: string }
+
+    ConsentRecord:
+      type: object
+      properties:
+        id: { type: string }
+        consent_type: { $ref: '#/components/schemas/ConsentType' }
+        consent_version: { type: string }
+        policy_version: { type: string }
+        app_version: { type: string }
+        accepted: { type: boolean }
+        accepted_at: { type: string, format: date-time, nullable: true }
+        withdrawn_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: >
+            null while active; set (not deleted) when withdrawn. A new
+            consent decision always inserts a new row rather than
+            mutating this one (consent_service.record_consent) — history
+            stays reconstructable.
+
+    CycleCreateRequest:
+      type: object
+      required: [start_date]
+      properties:
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date, nullable: true }
+        flow_level: { $ref: '#/components/schemas/FlowLevel' }
+        notes: { type: string, nullable: true }
+
+    CycleRecord:
+      type: object
+      properties:
+        id: { type: string }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date, nullable: true }
+        flow_level: { $ref: '#/components/schemas/FlowLevel' }
+        cycle_length_days: { type: integer, nullable: true, description: "Server-computed vs. the previous entry. Never defaulted to 28." }
+        period_duration_days: { type: integer, nullable: true, description: "start_date -> end_date, when end_date is set." }
+        notes: { type: string, nullable: true }
+
+    CycleSummary:
+      type: object
+      properties:
+        sufficient_data: { type: boolean, description: "false below MIN_CYCLES_FOR_AVERAGE (2)." }
+        message: { type: string, nullable: true, description: "Present when sufficient_data is false." }
+        average_cycle_length_days: { type: number, nullable: true }
+        average_period_duration_days: { type: number, nullable: true }
+        cycle_variability_stdev_days: { type: number, nullable: true }
+        is_high_variability: { type: boolean, description: "stdev > 7 days. Carries no diagnostic claim by itself." }
+        history: { type: array, items: { $ref: '#/components/schemas/CycleRecord' } }
+
+    CycleEstimateResponse:
+      type: object
+      properties:
+        sufficient_data: { type: boolean, description: "false below MIN_CYCLES_FOR_ESTIMATE (2)." }
+        message: { type: string, nullable: true, example: "We need more cycle history to provide a useful personalized estimate." }
+        estimated_start_date: { type: string, format: date, nullable: true }
+        based_on_cycle_count: { type: integer }
+        label: { type: string, example: "Estimated next period", description: "Render this label — never 'Your next period will start on...' (requirement #54/#84)." }
+
+    SymptomCreateRequest:
+      type: object
+      required: [symptom_type, severity, logged_date]
+      properties:
+        symptom_type: { $ref: '#/components/schemas/SymptomType' }
+        custom_label: { type: string, nullable: true, description: "Required (server-validated) when symptom_type is 'other'." }
+        severity: { type: integer, minimum: 1, maximum: 5 }
+        logged_date: { type: string, format: date }
+        notes: { type: string, nullable: true }
+
+    Symptom:
+      allOf:
+        - $ref: '#/components/schemas/SymptomCreateRequest'
+        - type: object
+          properties: { id: { type: string } }
+
+    AssessmentSubmitRequest:
+      type: object
+      properties:
+        responses: { type: object, description: "Keyed by the deployed model's own feature_schema field names." }
+        unanswered_fields: { type: array, items: { type: string } }
+        soaking_through_protection_hourly: { type: boolean, default: false }
+        bleeding_with_dizziness_or_fainting: { type: boolean, default: false }
+        pelvic_pain_severity: { type: integer, minimum: 1, maximum: 5, nullable: true }
+        fainting_or_severe_dizziness: { type: boolean, default: false }
+        chest_pain_or_breathing_difficulty: { type: boolean, default: false }
+
+    PredictionResult:
+      type: object
+      properties:
+        assessment_id: { type: string }
+        outcome: { $ref: '#/components/schemas/ScreeningOutcome' }
+        message: { type: string, description: "Pre-approved wording only. Never asserts or denies a diagnosis under any outcome." }
+        probability: { type: number, nullable: true }
+        explanation_framing: { type: string, nullable: true }
+        explanation: { type: object }
+        insufficient_data_reason: { type: string, nullable: true }
+        model_version: { type: string }
+        feature_schema_version: { type: string }
+        preprocessing_version: { type: string }
+        threshold_version: { type: string }
+        assessed_at: { type: string, format: date-time }
+        medical_disclaimer: { type: string }
+
+    AssessmentSubmitResponse:
+      type: object
+      properties:
+        assessment_id: { type: string }
+        safety:
+          type: object
+          properties:
+            urgent: { type: boolean }
+            message: { type: string, nullable: true }
+            triggered_rule_ids: { type: array, items: { type: string } }
+        result: { $ref: '#/components/schemas/PredictionResult' }
+
+    NotificationPreference:
+      type: object
+      properties:
+        period_reminders_enabled: { type: boolean }
+        days_before_period: { type: integer, enum: [1, 2, 3, 5] }
+        notification_time: { type: string, example: "08:00" }
+        cycle_reminders_enabled: { type: boolean }
+        symptom_reminders_enabled: { type: boolean }
+        privacy_mode: { type: boolean, default: true, description: "When true, delivered text is generic only — never health content on a lock screen." }
+        timezone: { type: string, example: "America/New_York" }
+
+    AdminUserRow:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string }
+        role: { $ref: '#/components/schemas/UserRole' }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    AdminModelVersionRow:
+      type: object
+      properties:
+        id: { type: string }
+        model_name: { type: string }
+        model_version: { type: string }
+        stage: { $ref: '#/components/schemas/ModelStage' }
+        evaluation_metrics: { type: object }
+        review_status: { type: string }
+        training_date: { type: string, format: date-time }
+        promoted_at: { type: string, format: date-time, nullable: true }
+        calibration_method: { type: string, nullable: true }
+        dataset_version: { type: string, nullable: true }
+
+    AdminMonitoringSnapshot:
+      type: object
+      description: Aggregate ML production-monitoring numbers only — never per-user data. See docs/ml_documentation.md §5.
+      properties:
+        window_days: { type: integer }
+        generated_at: { type: string, format: date-time }
+        production_model_version: { type: string, nullable: true }
+        prediction_distribution: { type: object }
+        assessment_missing_field_rate_pct: { type: object }
+        drift: { type: object, nullable: true }
+        inference_errors: { type: object }
+        inference_latency: { type: object }
+
+    AdminSystemHealth:
+      type: object
+      properties:
+        checked_at: { type: string, format: date-time }
+        database_reachable: { type: boolean }
+        production_model_loaded: { type: boolean }
+        production_model_version: { type: string, nullable: true }
+        total_users: { type: integer }
+        total_assessments: { type: integer }
+        total_predictions: { type: integer }
+
+    AdminAuditLogRow:
+      type: object
+      properties:
+        id: { type: string }
+        actor_user_id: { type: string, nullable: true }
+        actor_role: { type: string, nullable: true }
+        action: { type: string }
+        target_type: { type: string, nullable: true }
+        target_id: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }

@@ -1,0 +1,61 @@
+# --- Python / Backend ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Node / Web / Admin ---
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+
+# --- Flutter / Dart ---
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/.packages
+apps/mobile/build/
+apps/mobile/.pub-cache/
+apps/mobile/**/generated_plugin_registrant.dart
+
+# --- ML artifacts (large / regenerable) ---
+ml-platform/data/raw/*
+!ml-platform/data/raw/.gitkeep
+ml-platform/data/processed/*
+!ml-platform/data/processed/.gitkeep
+ml-platform/models/staging/*
+!ml-platform/models/staging/.gitkeep
+ml-platform/models/production/*.joblib
+ml-platform/models/production/*.pkl
+!ml-platform/models/production/.gitkeep
+ml-platform/models/archived/*
+!ml-platform/models/archived/.gitkeep
+*.joblib
+*.pkl
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Docker ---
+*.log
